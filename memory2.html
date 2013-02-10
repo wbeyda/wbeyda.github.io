@@ -1,0 +1,176 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+    <style>
+      body {
+        background-color: #333;
+      }
+      #container {
+      	margin: 0 auto;
+      	width: 500px;
+      	height: 500px;
+      	border-color: red;
+      	border-style: solid;
+      	border-width: 2px;
+      }
+    </style>
+ </head>
+  <body>
+    <div id="container"></div>
+    <script src="../JS/kinetic.js"></script>
+<script>
+if(stage != null) {
+	stage.clear();
+}
+
+var stage = new Kinetic.Stage({
+	container: 'container',
+	width: 500,
+	height: 500,
+	id: 'canvas'
+});
+var layer = new Kinetic.Layer();
+var colors = ["Red","Blue","Green","Yellow","Orange",
+"Purple","HotPink","Brown","Black","Grey",
+"White","Cyan","Lime"];
+
+function shuffle(myArray,nb_picks) {
+	for (i = myArray.length-1; i > 1  ; i--) {
+		var r = Math.floor(Math.random()*i);
+		var t = myArray[i];
+		myArray[i] = myArray[r];
+		myArray[r] = t;
+	}
+	return myArray.slice(0,nb_picks);
+}
+
+function cardColors() {
+	var colorString = [];
+	var shuffledColors = shuffle(colors, 13);
+	for (var i=0; i <= 9; i++) {
+		colorString.push( shuffledColors[i]);
+	}
+	var a1 = colorString;
+	var oldColorString = colorString.concat(a1);
+	var newColorString = shuffle(oldColorString, 20);
+	return newColorString;
+}
+
+var oldColorArray = cardColors();
+var colorArray = oldColorArray.slice(0);
+
+function makeCards(color) {
+	var k = 0;
+	for(var i=0; i <= 400; i += 100 ) {
+		for(var j=0; j <= 300; j += 100) { 
+			var rect = new Kinetic.Rect({
+		        x: i+5,
+		        y: j+5,
+		        width: 90,
+		        height: 90,
+		        fill: color,
+		        id: k 
+		      });
+			rect.on('click', clicker);
+			layer.add(rect);
+			stage.add(layer);
+			k++;
+		}
+	}
+}
+var matches = 0;
+var moves = 0;
+var turn  = 0;
+var firstTurn  = {};
+var secondTurn = {};
+function clicker() {
+	var i = this.attrs.id;
+	var oldRect = this.attrs.fill.toString();
+	var newRect = this.attrs;
+	newRect.fill = colorArray[i];
+	if (oldRect == "MidnightBlue") {
+		var card = 'unmatched';
+		layer.draw(newRect);
+		moves++;
+	}
+	else return;
+	if (moves %2 == 0) {
+		turn = 0;
+		secondTurn = this.attrs;
+	} else {
+		turn = 1;
+		firstTurn  = this.attrs;
+	}
+	if (turn == 0 && secondTurn.fill !== firstTurn.fill) {
+		firstTurn.fill  = "MidnightBlue";
+		secondTurn.fill = "MidnightBlue";
+		setTimeout(function() {	
+						layer.draw(firstTurn);
+						layer.draw(secondTurn);
+					}, 1000);		
+	} else if (turn == 0 && secondTurn.fill === firstTurn.fill){
+		matches++;
+	}
+	if (matches === 10) {
+			var movesMade = new Kinetic.Text({
+				x:75,
+				y:425,
+				text: 'It took you ' + moves +' moves to finish',
+				fontSize: 30,
+				fontFamily: 'Calibri',
+				fill: 'White'
+			});
+			var restartText = new Kinetic.Text({
+				x:80,
+				y:460,
+				text: 'Click anywhere to start again',
+				fontSize: 30,
+				fontFamily: 'Calibri',
+				fill: 'White'
+			});
+			layer.add(movesMade);
+			layer.add(restartText);
+			stage.add(layer);
+			setTimeout(function() {
+							stage.on('click', restart);
+						},1000);
+		}
+}
+
+function restart() {
+	stage.off('click')
+	stage.children[0].children[20].remove();
+	stage.children[0].children[20].remove();
+	makeCards('MidnightBlue');
+	matches = 0;
+	moves = 0;
+	oldColorArray = cardColors();
+	colorArray = oldColorArray.slice(0);
+}
+
+function listColors() {
+	var len = stage.children[0].children.length;
+	var colorsNames = [];
+	for (var i=0;i<len;i++) {
+		colorsNames.push(stage.children[0].children[i].attrs.fill);
+	}
+	return colorsNames;
+}
+
+function cardFactory (numberofCards) {
+	var rows = ($('#container').width()) /100;
+	var columns = ($('#container').height() - 100) / 100;
+	var oldColorArray = cardColors();
+	var colorArray = oldColorArray.slice(0);
+	console.log(rows, columns);
+}  
+stage.add(layer);
+
+//start gameloop
+function _init() {
+	makeCards('MidnightBlue');	 
+}
+_init();
+</script>
+  </body>
+</html>
